@@ -13,7 +13,7 @@ A personal system I built for myself, shared as-is. Built for **OpenCode v2** (`
 - `agents/` — `researcher`, `svg-maker`, `mermaid-maker`: the subagents the system delegates to
 - `plugins/md-link/` — live-mirrors the session to a markdown file for comfortable reading in Obsidian (assistant replies, your prompts, and quiz Q&A as callouts)
 - `plugins/learn-quiz.ts` — the graded `quiz_ask` / `quiz_grade` question pair
-- `plugins/learn-viz-tools.ts` + `tools/viz-common.ts` — the `write_*/edit_*/render_*` authoring loops the visual makers use (SVG via `rsvg-convert`, Mermaid via `mmdc`)
+- `plugins/learn-viz-tools.ts` + `lib/viz-common.ts` — the `write_*/edit_*/render_*` authoring loops the visual makers use (SVG via `rsvg-convert`, Mermaid via `mmdc`)
 
 ## Install
 
