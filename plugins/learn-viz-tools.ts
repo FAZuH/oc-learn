@@ -10,7 +10,7 @@ import {
   snippetAround,
   writeBody,
   writeFileSync,
-} from "../tools/viz-common.ts"
+} from "../lib/viz-common.ts"
 
 /**
  * learn-viz-tools — the visual maker authoring loops as v2 custom tools.
