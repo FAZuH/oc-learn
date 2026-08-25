@@ -1,4 +1,3 @@
-import { Plugin } from "@opencode-ai/plugin"
 
 /**
  * learn-quiz — GRADED question pair for the teaching system (v2 port of the
@@ -110,9 +109,10 @@ function firstLine(text: string, max = 80): string {
   return line.length > max ? line.slice(0, max - 1) + "…" : line
 }
 
-export default Plugin.define({
+export default {
   id: "fazuh.learn-quiz",
-  setup: async (ctx) => {
+
+  setup: async (ctx: any) => {
     await ctx.tool.transform((tools) => {
       // ── quiz_ask ──────────────────────────────────────────────────────────
       tools.add({
@@ -330,4 +330,4 @@ export default Plugin.define({
       })
     })
   },
-})
+}

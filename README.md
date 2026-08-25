@@ -12,11 +12,8 @@ A personal system I built for myself, shared as-is. Built for **OpenCode v2** (`
 - `skills/visualize/` — adds a correct, minimal diagram to a lesson when an idea is clearer as a picture
 - `agents/` — `researcher`, `svg-maker`, `mermaid-maker`: the subagents the system delegates to
 - `plugins/md-link/` — live-mirrors the session to a markdown file for comfortable reading in Obsidian (assistant replies, your prompts, and quiz Q&A as callouts)
-
-Two pieces install **outside** this repo, into your global OpenCode config (`~/.config/opencode/`):
-
-- `plugins/learn-viz-tools.ts` + `tools/viz-common.ts` — the `write_*/edit_*/render_*` authoring loops the visual makers use (SVG via `rsvg-convert`, Mermaid via `mmdc`)
 - `plugins/learn-quiz.ts` — the graded `quiz_ask` / `quiz_grade` question pair
+- `plugins/learn-viz-tools.ts` + `tools/viz-common.ts` — the `write_*/edit_*/render_*` authoring loops the visual makers use (SVG via `rsvg-convert`, Mermaid via `mmdc`)
 
 ## Install
 
@@ -26,14 +23,14 @@ This repo **is** an `.opencode` directory. From your learning project's root:
 git clone <this-repo-url> .opencode
 ```
 
-Then open `opencode2` in that directory. (Or copy the pieces you want into your existing `.opencode`.)
+Then open `opencode2` in that directory. Skills, agents, and all plugins are discovered automatically — nothing else to install.
 
-Then install the two global pieces:
+One exception: the `md-link` **TUI module** (the `ctrl+alt:m` / `/md-link` toggle) is not auto-discovered by v2, so register it once:
 
 ```bash
-cp <repo>/global/learn-viz-tools.ts ~/.config/opencode/plugins/
-cp <repo>/global/viz-common.ts     ~/.config/opencode/tools/
-cp <repo>/global/learn-quiz.ts     ~/.config/opencode/plugins/
+./install.sh                # adds the tui module to ~/.config/opencode/cli.json
+./install.sh --dry-run      # preview
+./uninstall.sh              # remove it again
 ```
 
 ## Requirements

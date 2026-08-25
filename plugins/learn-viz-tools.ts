@@ -1,4 +1,3 @@
-import { Plugin } from "@opencode-ai/plugin"
 import {
   applyEdit,
   currentBody,
@@ -41,9 +40,10 @@ function sid(tctx: any): string {
   return typeof s === "string" && s.length > 0 ? s : "shared"
 }
 
-export default Plugin.define({
+export default {
   id: "fazuh.learn-viz-tools",
-  setup: async (ctx) => {
+
+  setup: async (ctx: any) => {
     const baseDir = ctx.worktree || ctx.directory || process.cwd()
 
     // ── managed-file helpers shared by both trios ────────────────────────────
@@ -226,4 +226,4 @@ export default Plugin.define({
       tools.add(makeRenderTool("mermaid") as any)
     })
   },
-})
+}
