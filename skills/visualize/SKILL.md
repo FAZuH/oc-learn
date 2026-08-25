@@ -20,7 +20,7 @@ Do NOT visualize when prose or a single equation already carries it. A decorativ
 
 ## Choose the maker
 
-Two makers, discovered from `.pi/agents/`:
+Two makers, discovered from `.opencode/agents/`:
 
 - **`mermaid-maker`** — structural/relational visuals: dependency graphs, flowcharts, sequence/state/ER/class diagrams, trees, mindmaps, timelines. This is the default and fits the dependency-graph pedagogy directly.
 - **`svg-maker`** — spatial/geometric visuals Mermaid can't lay out: exact coordinates, geometry figures, number lines, vectors, plots, custom shapes.
@@ -43,10 +43,10 @@ Keep the idea intact but trust the maker to compose; if your brief lists more th
 Dispatch the maker with the `subagent` tool:
 
 ```
-subagent(agent="mermaid-maker", task="<your minimal, concrete brief>")
+subagent(agent="mermaid-maker", description="Render mermaid diagram", prompt="<your minimal, concrete brief>")
 ```
 ```
-subagent(agent="svg-maker", task="<your minimal, concrete brief>")
+subagent(agent="svg-maker", description="Render SVG picture", prompt="<your minimal, concrete brief>")
 ```
 
 The maker owns its own purpose-built tools (`write_*`/`edit_*`/`render_*`) — it authors the source, renders it to a PNG, **looks at the PNG and iterates until it is correct and clean**, publishes it into the vault with a unique filename, and returns:
@@ -75,4 +75,4 @@ That's all. The `md-log` extension mirrors your reply text verbatim into the lin
 - PNG embed means **what the maker verified is pixel-identical to what the learner sees** — no re-render drift.
 - Unique filenames keep Obsidian's by-filename embed resolution unambiguous.
 
-> The makers render through the project's `visual-tools` extension (Mermaid via a bundled `@mermaid-js/mermaid-cli` + installed Chrome; SVG via `rsvg-convert`, fallback ImageMagick). You don't render anything yourself — you only brief the maker and embed the filename it returns.
+> The makers render through the global `learn-viz-tools` plugin (Mermaid via `mmdc` from PATH; SVG via `rsvg-convert`, fallback ImageMagick). You don't render anything yourself — you only brief the maker and embed the filename it returns.
