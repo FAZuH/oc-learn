@@ -44,7 +44,14 @@ export default {
   id: "fazuh.learn-viz-tools",
 
   setup: async (ctx: any) => {
-    const baseDir = ctx.worktree || ctx.directory || process.cwd()
+    // Publish base: resolved per call from the session context (a globally
+    // loaded plugin's setup context points at the server's default location,
+    // not the session's project).
+    const fallbackBase = ctx.worktree || ctx.directory || process.cwd()
+
+    function publishBase(tctx: any): string {
+      return tctx?.worktree || tctx?.directory || fallbackBase
+    }
 
     // ── managed-file helpers shared by both trios ────────────────────────────
     function requireBody(group: string, bodyFile: string, tctx: any) {
@@ -184,7 +191,7 @@ export default {
 
             const look = `NOW open ${outPath} with the read tool and LOOK at it. `
             if (input.save_as) {
-              const pub = publish(outPath, String(input.save_as), baseDir)
+              const pub = publish(outPath, String(input.save_as), publishBase(tctx))
               return {
                 content:
                   `Published to viz/.\nfilename: ${pub.filename}\npath: ${pub.path}\n\n${look}Confirm it is correct and true to the brief before returning it.`,
