@@ -18,3 +18,4 @@ __pycache__/
 *.log
 .opencode
 .learn-links.json
+viz/
