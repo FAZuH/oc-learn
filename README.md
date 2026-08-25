@@ -38,6 +38,12 @@ One source copy symlinked to other projects.
 
 Then open `opencode2` in the project. Skills, agents, and all plugins are discovered automatically.
 
+Visuals publish into the session project's `viz/` by default. To always publish somewhere else (an Obsidian vault, say), point `~/.config/opencode/viz-state.json` at it — empty or missing means the project dir:
+
+```json
+{ "defaultDir": "/home/you/Notes/viz" }
+```
+
 ## Requirements
 
 - [OpenCode v2](https://opencode.ai/v2/docs) (`opencode2` beta) — developed against beta-1805x; plugin APIs may still shift

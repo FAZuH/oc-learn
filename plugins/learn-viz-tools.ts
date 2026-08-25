@@ -1,3 +1,5 @@
+import { homedir } from "node:os"
+import { isAbsolute } from "node:path"
 import {
   applyEdit,
   currentBody,
@@ -47,7 +49,10 @@ export default {
     // Publish base: resolved per call. A globally loaded plugin's setup ctx
     // points at the server's default location ($HOME), and the execute ctx
     // carries only the sessionID — so resolve the session's project dir from
-    // the session API when the ctx lacks directory/worktree.
+    // the session API when the ctx lacks directory/worktree. A configured
+    // defaultDir (viz-state.json, md-link-style) overrides all of that;
+    // empty means publish into the session's project.
+    const VIZ_STATE_FILE = join(homedir(), ".config", "opencode", "viz-state.json")
     const fallbackBase = ctx.worktree || ctx.directory || process.cwd()
 
     function apiGet(path: string): Promise<any> {
@@ -63,6 +68,14 @@ export default {
     }
 
     async function publishBase(tctx: any): Promise<string> {
+      try {
+        const st = JSON.parse(readFileSync(VIZ_STATE_FILE, "utf8"))
+        const configured = typeof st?.defaultDir === "string" ? st.defaultDir.trim() : ""
+        if (configured) {
+          const base = tctx?.worktree || tctx?.directory || fallbackBase
+          return isAbsolute(configured) ? configured : join(base, configured)
+        }
+      } catch {}
       const direct = tctx?.worktree || tctx?.directory
       if (direct) return direct
       const sid = typeof tctx?.sessionID === "string" ? tctx.sessionID : ""
@@ -162,7 +175,7 @@ export default {
           `Render the CURRENT session ${cap} source to a PNG, then OPEN the returned PNG path with the read tool and LOOK at it before continuing — ` +
           `rendering success proves nothing about correctness. You do NOT pass the source here; call write_${kind} first.\n\n` +
           `Iterate freely with no \`save_as\` (preview only). When it is correct and clean, call once more with \`save_as\` set to a short kebab-case topic slug: ` +
-          `that publishes the PNG into <project>/viz with a unique filename and returns the filename to embed. On a render error this returns error text — fix with edit_${kind} and re-render.`,
+          `that publishes the PNG into <project>/viz (or the dir configured via ~/.config/opencode/viz-state.json) with a unique filename and returns the filename to embed. On a render error this returns error text — fix with edit_${kind} and re-render.`,
         input: {
           type: "object",
           properties: {
