@@ -10,7 +10,8 @@
  *   ctrl+alt:m / /md-link [dir]   toggle mirroring for the focused session;
  *                                 ON backfills the newest completed reply
  *   /md-link-dir                  set the default output directory
- *   /md-link-keep                 keep only the N newest replies (empty = all)
+ *   /md-link-keep                 keep only the N newest replies (empty = all);
+ *                                 existing mirrors are trimmed immediately
  *
  * On TUI exit, mirror files belonging to this project are deleted — mirrors
  * are transient. See core.ts for state/file contracts.
@@ -25,6 +26,8 @@ import {
   isEnabled,
   loadState,
   messageText,
+  mirrorFile,
+  pruneMirror,
   saveState,
   touchMirror,
 } from "./core.ts"
@@ -215,7 +218,20 @@ export default {
         const st = loadState()
         st.keep = keep
         saveState(st)
-        toast(keep == null ? "Mirror keeps all messages" : `Mirror shows only the last ${keep}`)
+        if (keep == null) {
+          toast("Mirror keeps all messages")
+          return
+        }
+        // Apply immediately: trim every enabled session's live mirror now.
+        let trimmed = 0
+        for (const sid of Object.keys(st.sessions)) {
+          const f = mirrorFile(st, sid, pwd())
+          if (!f || !existsSync(f)) continue
+          const before = readFileSync(f, "utf-8")
+          pruneMirror(f, keep)
+          if (readFileSync(f, "utf-8") !== before) trimmed++
+        }
+        toast(`Mirror shows only the last ${keep}${trimmed ? ` (${trimmed} mirror${trimmed === 1 ? "" : "s"} trimmed)` : ""}`)
       } catch (e: any) {
         toast(`Cannot open dialog: ${e?.message ?? e}`, "error")
       }
