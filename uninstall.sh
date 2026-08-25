@@ -138,6 +138,15 @@ EOF
       ok "cli.json — tui module unregistered"
     fi
   fi
+
+  # Prune item dirs (and the target itself) if they are now empty. rmdir
+  # refuses non-empty dirs, so real content can never be deleted here.
+  if [[ $DRY -eq 0 ]]; then
+    for top in agents skills plugins lib; do
+      rmdir "$key/$top" 2>/dev/null || true
+    done
+    rmdir "$key" 2>/dev/null || true
+  fi
 done
 
 # ── prune cleaned targets from the manifest ──────────────────────────────────
