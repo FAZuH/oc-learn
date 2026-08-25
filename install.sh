@@ -127,6 +127,41 @@ info "repo     $REPO"
 info "target   $TARGET ($([[ $MODE == global ]] && echo global || echo project-level))"
 [[ $DRY -eq 1 ]] && info "${B}dry run${R} — nothing will be changed"
 
+# ── prune stale links: tracked symlinks whose repo item was renamed/removed ──
+if [[ -f "$MANIFEST" ]]; then
+  step "Prune stale links"
+  LEARN_DRY=$DRY python3 - "$MANIFEST" "$TARGET_KEY" "$REPO/" <<'EOF' | while IFS= read -r link; do
+import json, os, sys
+manifest_path, key, repo_prefix = sys.argv[1:4]
+dry = os.environ.get("LEARN_DRY") == "1"
+try:
+    m = json.load(open(manifest_path))
+except Exception:
+    raise SystemExit
+e = m.get(key)
+if not e:
+    raise SystemExit
+kept = []
+for link in e.get("links", []):
+    if os.path.islink(link) and os.readlink(link).startswith(repo_prefix) and not os.path.exists(link):
+        if not dry:
+            os.unlink(link)
+        print(link)
+    else:
+        kept.append(link)
+e["links"] = kept
+m[key] = e
+json.dump(m, open(manifest_path, "w"), indent=2)
+EOF
+    [[ -n "$link" ]] || continue
+    if [[ $DRY -eq 1 ]]; then
+      would "prune stale $(basename "$link")"
+    else
+      ok "pruned stale $(basename "$link")"
+    fi
+  done
+fi
+
 step "Linking ${#items[@]} items"
 created=0
 for rel in "${items[@]}"; do
