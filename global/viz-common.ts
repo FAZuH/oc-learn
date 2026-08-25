@@ -1,37 +1,26 @@
 /**
- * Shared helpers for the visual-tools authoring loops (mermaid_tools.ts,
- * svg_tools.ts): a subprocess runner, a per-session managed source file, an
- * exact-match editor (pi-edit semantics), and publishing a chosen render into
- * <cwd>/viz with a unique filename.
+ * Shared helpers for the learn visual authoring loops (write_/edit_/render_
+ * trios for SVG and Mermaid, registered by plugins/learn-viz-tools.ts):
+ * subprocess runner, per-session managed source file, exact-match editor,
+ * and publishing a chosen render into <worktree>/viz with a unique filename.
  *
- * Each tool file keeps its OWN session state (importing the type/helpers here),
- * so mermaid and svg never share a source file.
+ * Ported from the pi visual-tools extension's _common.ts. Differences vs the
+ * original: macOS PATH extras dropped (Linux binaries live in /usr/bin),
+ * staging moved under /tmp/opencode, and sessions are keyed by OpenCode
+ * sessionID (one server process serves many sessions) instead of pid.
  */
 
 import { spawn } from "node:child_process"
 import { tmpdir } from "node:os"
-import { basename, dirname, join } from "node:path"
+import { join } from "node:path"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 
-// rsvg-convert lives under MacPorts (/opt/local/bin); magick/gs under
-// /usr/local/bin; Homebrew under /opt/homebrew/bin. Augment PATH so the child
-// pi process (which may have inherited a thin PATH) still resolves them.
-export const EXTRA_PATH = ["/opt/local/bin", "/usr/local/bin", "/opt/homebrew/bin"]
+export const RENDER_TIMEOUT_MS_DEFAULT = 120_000
 
-// Transient session/preview files live under the OS temp dir (NOT the vault),
-// so only the PUBLISHED PNG ever lands inside the Obsidian vault (viz/).
-export const STAGING_ROOT = join(tmpdir(), "pi-visual-tools")
+/** Transient session/preview files live outside any vault: only PUBLISHED
+ *  PNGs ever land inside the learner's project (viz/). */
+export const STAGING_ROOT = join(tmpdir(), "opencode", "viz-tools")
 export const FILES_DIRNAME = "viz"
-
-export const CHROME_CANDIDATES = [
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-]
-
-export function findChrome(): string | undefined {
-  for (const c of CHROME_CANDIDATES) if (existsSync(c)) return c
-  return undefined
-}
 
 export interface RunResult {
   code: number | null
@@ -43,13 +32,12 @@ export interface RunResult {
 export function run(
   cmd: string,
   args: string[],
-  opts: { cwd: string; timeoutMs: number; env?: Record<string, string> },
+  opts: { cwd?: string; timeoutMs?: number },
 ): Promise<RunResult> {
   return new Promise((resolveRun) => {
-    const augmentedPath = [...EXTRA_PATH, process.env.PATH ?? ""].join(":")
     const child = spawn(cmd, args, {
       cwd: opts.cwd,
-      env: { ...process.env, ...(opts.env ?? {}), PATH: augmentedPath },
+      env: process.env,
     })
     let stdout = ""
     let stderr = ""
@@ -57,7 +45,7 @@ export function run(
     const timer = setTimeout(() => {
       timedOut = true
       child.kill("SIGKILL")
-    }, opts.timeoutMs)
+    }, opts.timeoutMs ?? RENDER_TIMEOUT_MS_DEFAULT)
     child.stdout.on("data", (d) => (stdout += d.toString()))
     child.stderr.on("data", (d) => (stderr += d.toString()))
     child.on("error", (err) => {
@@ -71,30 +59,46 @@ export function run(
   })
 }
 
-/** Per-session managed source file, one per child pi process (pid-keyed). */
+/** Per-session managed source file state. */
 export interface Session {
   workDir: string
   bodyPath: string
 }
 
-/** Per-session work dir under the OS temp dir, keyed by pid + a group name. */
-export function sessionDir(group: string): string {
-  return join(STAGING_ROOT, `${group}-${process.pid}`)
+const sessions = new Map<string, Session>()
+
+function sessionKey(group: string, sessionID: string): string {
+  // Sanitize: sessionIDs are [A-Za-z0-9_] but never trust wire data for paths.
+  const sid = sessionID.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 64) || "anon"
+  return `${group}-${sid}`
 }
 
-/** Write the full source to the managed file, creating the session work dir. */
-export function writeBody(group: string, bodyFileName: string, source: string): Session {
-  const workDir = sessionDir(group)
+/** Write the full source to the session's managed file, creating its work dir. */
+export function writeBody(
+  group: string,
+  bodyFileName: string,
+  source: string,
+  sessionID: string,
+): Session {
+  const key = sessionKey(group, sessionID)
+  const workDir = join(STAGING_ROOT, key)
   mkdirSync(workDir, { recursive: true })
   const bodyPath = join(workDir, bodyFileName)
   writeFileSync(bodyPath, source, "utf8")
-  return { workDir, bodyPath }
+  const s: Session = { workDir, bodyPath }
+  sessions.set(key, s)
+  return s
+}
+
+/** Current managed file for this group+session, or undefined if none yet. */
+export function currentBody(group: string, sessionID: string): Session | undefined {
+  return sessions.get(sessionKey(group, sessionID))
 }
 
 /**
- * Exact-match single replacement on the current source, matching pi's built-in
- * edit: old_text must appear exactly once. Returns the updated content and the
- * match offset, or throws a precise error.
+ * Exact-match single replacement on the current source: old_text must appear
+ * exactly once. Returns the updated content and the match offset, or throws
+ * a precise error.
  */
 export function applyEdit(current: string, oldText: string, newText: string): { updated: string; index: number } {
   if (oldText === "") throw new Error("`old_text` must be non-empty.")
@@ -130,9 +134,9 @@ export function snippetAround(content: string, index: number, contextLines = 3):
   return out.join("\n")
 }
 
-/** Copy a rendered PNG into <cwd>/viz with a unique, slugified name. */
-export function publish(pngPath: string, slug: string): { filename: string; path: string } {
-  const filesDir = join(process.cwd(), FILES_DIRNAME)
+/** Copy a rendered PNG into <baseDir>/viz with a unique, slugified name. */
+export function publish(pngPath: string, slug: string, baseDir?: string): { filename: string; path: string } {
+  const filesDir = join(baseDir || process.cwd(), FILES_DIRNAME)
   mkdirSync(filesDir, { recursive: true })
   const clean =
     slug
@@ -145,4 +149,4 @@ export function publish(pngPath: string, slug: string): { filename: string; path
   return { filename, path: dest }
 }
 
-export { basename, dirname, join, existsSync, mkdirSync, readFileSync, writeFileSync }
+export { existsSync, join, mkdirSync, readFileSync, writeFileSync }

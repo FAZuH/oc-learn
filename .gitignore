@@ -16,3 +16,4 @@ __pycache__/
 # Runtime state
 .memory/
 *.log
+.opencode
