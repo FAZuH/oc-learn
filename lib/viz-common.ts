@@ -134,17 +134,17 @@ export function snippetAround(content: string, index: number, contextLines = 3):
   return out.join("\n")
 }
 
-/** Copy a rendered PNG into <baseDir>/viz with a unique, slugified name. */
-export function publish(pngPath: string, slug: string, baseDir?: string): { filename: string; path: string } {
-  const filesDir = join(baseDir || process.cwd(), FILES_DIRNAME)
-  mkdirSync(filesDir, { recursive: true })
+/** Copy a rendered PNG into `filesDir` (the exact output directory) with a unique, slugified name. */
+export function publish(pngPath: string, slug: string, filesDir?: string): { filename: string; path: string } {
+  const dir = filesDir || join(process.cwd(), FILES_DIRNAME)
+  mkdirSync(dir, { recursive: true })
   const clean =
     slug
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "viz"
   const filename = `viz-${clean}-${Date.now()}.png`
-  const dest = join(filesDir, filename)
+  const dest = join(dir, filename)
   copyFileSync(pngPath, dest)
   return { filename, path: dest }
 }

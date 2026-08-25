@@ -4,6 +4,7 @@ import {
   applyEdit,
   currentBody,
   existsSync,
+  FILES_DIRNAME,
   join,
   mkdirSync,
   publish,
@@ -68,25 +69,28 @@ export default {
     }
 
     async function publishBase(tctx: any): Promise<string> {
+      const sessionBase = (async () => {
+        const direct = tctx?.worktree || tctx?.directory
+        if (direct) return direct
+        const sid = typeof tctx?.sessionID === "string" ? tctx.sessionID : ""
+        if (sid) {
+          try {
+            const s = await apiGet(`/api/session/${sid}`)
+            const dir = s?.data?.location?.directory || s?.data?.directory
+            if (dir) return dir
+          } catch {}
+        }
+        return fallbackBase
+      })()
       try {
         const st = JSON.parse(readFileSync(VIZ_STATE_FILE, "utf8"))
         const configured = typeof st?.defaultDir === "string" ? st.defaultDir.trim() : ""
         if (configured) {
-          const base = tctx?.worktree || tctx?.directory || fallbackBase
+          const base = await sessionBase
           return isAbsolute(configured) ? configured : join(base, configured)
         }
       } catch {}
-      const direct = tctx?.worktree || tctx?.directory
-      if (direct) return direct
-      const sid = typeof tctx?.sessionID === "string" ? tctx.sessionID : ""
-      if (sid) {
-        try {
-          const s = await apiGet(`/api/session/${sid}`)
-          const dir = s?.data?.location?.directory || s?.data?.directory
-          if (dir) return dir
-        } catch {}
-      }
-      return fallbackBase
+      return join(await sessionBase, FILES_DIRNAME)
     }
 
     // ── managed-file helpers shared by both trios ────────────────────────────
