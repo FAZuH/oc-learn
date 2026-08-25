@@ -152,38 +152,46 @@ for rel in "${items[@]}"; do
 done
 
 # ── cli.json: only global installs touch it (TUI module registration) ───────
-# CLI_OURS records that our tui entry lives in this cli.json, whether we just
-# added it or found it already there — uninstall removes it either way.
+# CLI_OURS records that our tui entries live in this cli.json, whether we just
+# added them or found them already there — uninstall removes them either way.
+TUI_PATHS=("$REPO/plugins/md-link/tui.ts" "$REPO/plugins/learn-viz-tui.ts")
 CLI_OURS=0
 if [[ "$MODE" == "global" ]]; then
-  step "Register TUI module"
-  TUI_PATH="$REPO/plugins/md-link/tui.ts"
-  [[ -f "$TUI_PATH" ]] || die "tui module missing: $TUI_PATH"
+  step "Register TUI modules"
+  for p in "${TUI_PATHS[@]}"; do
+    [[ -f "$p" ]] || die "tui module missing: $p"
+  done
   if [[ $DRY -eq 1 ]]; then
-    would "add $TUI_PATH to $GLOBAL_CFG/cli.json plugins[]"
+    for p in "${TUI_PATHS[@]}"; do
+      would "add $p to $GLOBAL_CFG/cli.json plugins[]"
+    done
   else
-    out="$(python3 - "$GLOBAL_CFG/cli.json" "$TUI_PATH" <<'EOF'
+    out="$(python3 - "$GLOBAL_CFG/cli.json" "${TUI_PATHS[@]}" <<'EOF'
 import json, sys
-path, tui = sys.argv[1], sys.argv[2]
+path, tuis = sys.argv[1], sys.argv[2:]
 try:
     cfg = json.load(open(path))
 except FileNotFoundError:
     cfg = {}
 plugins = cfg.setdefault("plugins", [])
-if tui not in plugins:
-    plugins.append(tui)
-    json.dump(cfg, open(path, "w"), indent=2)
-    print("added")
-else:
-    print("present")
+for tui in tuis:
+    if tui not in plugins:
+        plugins.append(tui)
+        print("added " + tui)
+    else:
+        print("present " + tui)
+json.dump(cfg, open(path, "w"), indent=2)
 EOF
 )"
     CLI_OURS=1
-    if [[ "$out" == "added" ]]; then
-      ok "cli.json — tui module registered"
-    else
-      ok "cli.json — tui module already registered"
-    fi
+    while IFS= read -r line; do
+      [[ -n "$line" ]] || continue
+      if [[ "$line" == added* ]]; then
+        ok "cli.json — registered $(basename "${line#added }")"
+      else
+        ok "cli.json — already registered $(basename "${line#present }")"
+      fi
+    done <<< "$out"
   fi
 fi
 

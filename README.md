@@ -19,6 +19,7 @@ Differences between this repo from upstream is listed in [differences from upstr
 - `plugins/md-link/` — live-mirrors the session to a markdown file for comfortable reading in Obsidian (assistant replies, your prompts, and quiz Q&A as callouts)
 - `plugins/learn-quiz.ts` — the graded `quiz_ask` / `quiz_grade` question pair
 - `plugins/learn-viz-tools.ts` + `lib/viz-common.ts` — the `write_*/edit_*/render_*` authoring loops the visual makers use (SVG via `rsvg-convert`, Mermaid via `mmdc`)
+- `plugins/learn-viz-tui.ts` — the `/viz-dir` TUI command that sets the viz output directory
 
 ## Install
 
@@ -40,7 +41,7 @@ One source copy symlinked to other projects.
 
 Then open `opencode2` in the project. Skills, agents, and all plugins are discovered automatically.
 
-Visuals publish into the session project's `viz/` by default. To always publish somewhere else (an Obsidian vault, say), point `~/.config/opencode/viz-state.json` at it — empty or missing means the project dir:
+Visuals publish into the session project's `viz/` by default. To always publish somewhere else (an Obsidian vault, say), run `/viz-dir` in the TUI — or point `~/.config/opencode/viz-state.json` at it directly; empty or missing means the project dir:
 
 ```json
 { "defaultDir": "/home/you/Notes/viz" }

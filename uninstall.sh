@@ -5,6 +5,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GLOBAL_CFG="$HOME/.config/opencode"
 MANIFEST="$REPO/.learn-links.json"
+TUI_PATHS=("$REPO/plugins/md-link/tui.ts" "$REPO/plugins/learn-viz-tui.ts")
 DRY=0
 TARGET=""     # resolved config dir whose links get removed
 TARGET_KEY="" # manifest key
@@ -117,25 +118,26 @@ import json,sys
 e=json.loads(sys.argv[1])
 print('\n'.join(e.get('links',[])))" "$ENTRY_JSON")
 
-  # cli.json entry: only for the global target, only if it is our path.
+  # cli.json entries: only for the global target, only for our tui paths.
   IS_CLI=$(python3 -c "
 import json,sys
 e=json.loads(sys.argv[1])
 print('1' if e.get('cli') else '0')" "$ENTRY_JSON")
   if [[ "$IS_CLI" == "1" ]]; then
-    TUI_PATH="$REPO/plugins/md-link/tui.ts"
     if [[ $DRY -eq 1 ]]; then
-      would "remove tui module from $key/cli.json"
+      would "remove tui modules from $key/cli.json"
     else
-      python3 - "$key/cli.json" "$TUI_PATH" <<'EOF'
+      python3 - "$key/cli.json" "${TUI_PATHS[@]}" <<'EOF'
 import json, sys
-path, tui = sys.argv[1], sys.argv[2]
+path, tuis = sys.argv[1], sys.argv[2:]
 cfg = json.load(open(path))
-if tui in cfg.get("plugins", []):
-    cfg["plugins"].remove(tui)
-    json.dump(cfg, open(path, "w"), indent=2)
+plugins = cfg.get("plugins", [])
+for tui in tuis:
+    if tui in plugins:
+        plugins.remove(tui)
+json.dump(cfg, open(path, "w"), indent=2)
 EOF
-      ok "cli.json — tui module unregistered"
+      ok "cli.json — tui modules unregistered"
     fi
   fi
 
