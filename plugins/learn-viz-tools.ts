@@ -44,13 +44,36 @@ export default {
   id: "fazuh.learn-viz-tools",
 
   setup: async (ctx: any) => {
-    // Publish base: resolved per call from the session context (a globally
-    // loaded plugin's setup context points at the server's default location,
-    // not the session's project).
+    // Publish base: resolved per call. A globally loaded plugin's setup ctx
+    // points at the server's default location ($HOME), and the execute ctx
+    // carries only the sessionID — so resolve the session's project dir from
+    // the session API when the ctx lacks directory/worktree.
     const fallbackBase = ctx.worktree || ctx.directory || process.cwd()
 
-    function publishBase(tctx: any): string {
-      return tctx?.worktree || tctx?.directory || fallbackBase
+    function apiGet(path: string): Promise<any> {
+      const proc = Bun.spawn(["opencode2", "api", "get", path], { stdout: "pipe", stderr: "pipe" })
+      return new Response(proc.stdout).text().then(async (out) => {
+        await proc.exited
+        try {
+          return JSON.parse(out)
+        } catch {
+          return undefined
+        }
+      })
+    }
+
+    async function publishBase(tctx: any): Promise<string> {
+      const direct = tctx?.worktree || tctx?.directory
+      if (direct) return direct
+      const sid = typeof tctx?.sessionID === "string" ? tctx.sessionID : ""
+      if (sid) {
+        try {
+          const s = await apiGet(`/api/session/${sid}`)
+          const dir = s?.data?.location?.directory || s?.data?.directory
+          if (dir) return dir
+        } catch {}
+      }
+      return fallbackBase
     }
 
     // ── managed-file helpers shared by both trios ────────────────────────────
@@ -191,7 +214,7 @@ export default {
 
             const look = `NOW open ${outPath} with the read tool and LOOK at it. `
             if (input.save_as) {
-              const pub = publish(outPath, String(input.save_as), publishBase(tctx))
+              const pub = publish(outPath, String(input.save_as), await publishBase(tctx))
               return {
                 content:
                   `Published to viz/.\nfilename: ${pub.filename}\npath: ${pub.path}\n\n${look}Confirm it is correct and true to the brief before returning it.`,
