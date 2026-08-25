@@ -17,3 +17,4 @@ __pycache__/
 .memory/
 *.log
 .opencode
+.learn-links.json
