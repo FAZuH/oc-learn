@@ -1,0 +1,9 @@
+{
+  "name": "learn-md-link",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./tui": "./tui.ts"
+  }
+}

@@ -13,7 +13,7 @@
  *   /md-link-keep                 keep only the N newest replies (empty = all)
  *
  * On TUI exit, mirror files belonging to this project are deleted — mirrors
- * are transient. See lib/md-link-core.ts for state/file contracts.
+ * are transient. See core.ts for state/file contracts.
  */
 
 import { accessSync, constants as fsConstants, existsSync, readFileSync, rmSync, statSync } from "fs"
@@ -27,7 +27,7 @@ import {
   messageText,
   saveState,
   touchMirror,
-} from "../lib/md-link-core.ts"
+} from "./core.ts"
 
 type DirResult = { ok: true; abs: string } | { ok: false; error: string }
 
@@ -72,7 +72,7 @@ function extractArg(input: unknown): string {
  *
  * `opencode2 api` handles port discovery + auth; response items are
  * NEWEST-FIRST and may cap at ~50, with two text shapes (content[] parts or
- * flat text — see md-link-core.messageText).
+ * flat text — see core.messageText).
  *
  * Replies still streaming when the toggle fires are skipped: their
  * time.created is too recent, and live ordinals will finish them anyway.

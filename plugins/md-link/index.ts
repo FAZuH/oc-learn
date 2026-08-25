@@ -2,7 +2,7 @@
  * md-link — Obsidian live-mirror (server side).
  *
  * Mirrors assistant replies to `<dir>/<sessionID>.md` for sessions enabled in
- * the state file (see lib/md-link-core.ts for the contracts). Sessions are
+ * the state file (see core.ts for the contracts). Sessions are
  * toggled exclusively by the TUI plugin — this plugin never enables anything.
  *
  * How it syncs: a 2.5 s poller pulls each enabled session's messages via
@@ -22,7 +22,7 @@ import {
   mirrorFile,
   messageText,
   touchMirror,
-} from "../lib/md-link-core.ts"
+} from "./core.ts"
 import { join } from "path"
 
 /** Legacy fallback dir for sessions with no recorded path. */

@@ -2,11 +2,12 @@
  * md-link core — single source of truth for the Obsidian live-mirror pair.
  *
  * Consumers:
- *   <this repo>/plugins/md-link.ts         (server: mirrors assistant replies)
- *   <this repo>/tui-plugins/md-link-tui.ts (TUI: ctrl+alt+m / /md-link toggle)
+ *   plugins/md-link/index.ts (server: mirrors assistant replies)
+ *   plugins/md-link/tui.ts   (TUI: ctrl+alt+m / /md-link toggle)
  *
- * This repo is cloned as a project's `.opencode` directory; plugins/ auto-loads
- * server-side, while the TUI module needs an explicit entry in cli.json.
+ * This repo is cloned as a project's `.opencode` directory; plugins/md-link/
+ * auto-loads server-side as a package dir, while tui.ts needs an explicit
+ * entry in cli.json.
  *
  * State file contract (~/.config/opencode/md-link-state.json):
  *   {
