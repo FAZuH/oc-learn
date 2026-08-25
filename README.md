@@ -6,7 +6,7 @@ This is a port of [amosblomqvist's learning system](https://github.com/amosblomq
 
 The teaching philosophy, the skills, and the system design are all his; this repo adapts that pi configuration to [OpenCode v2](https://opencode.ai/v2/docs/).
 
-Differences between this repo from upstream is listed in [[#differences-from-upstream]]
+Differences between this repo from upstream is listed in [differences from upstream](#differences-from-upstream) section
 
 > [!WARNING]
 > This repo is still in experimental phase. Some stuffs may not work/break.
