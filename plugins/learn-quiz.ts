@@ -104,9 +104,11 @@ function optionRef(options: QuizOption[], index: number): string {
   return `${index}. ${opt ? opt.label : "(unknown)"}`
 }
 
-function firstLine(text: string, max = 80): string {
-  const line = text.split("\n")[0].trim()
-  return line.length > max ? line.slice(0, max - 1) + "…" : line
+/** First line of a (possibly multi-line) question — used as the form title.
+ * Never truncated: an ellipsized form title IS the "quiz cuts off my
+ * question" bug; the TUI can wrap or clip it visually, we must not. */
+function firstLine(text: string): string {
+  return text.split("\n")[0].trim()
 }
 
 export default {
