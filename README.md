@@ -2,9 +2,9 @@
 
 [![video](assets/thumbnail.png)](https://www.youtube.com/watch?v=kzcI5F4tGiU)
 
-My AI learning system from this video: [How I Use AI to Learn Things](https://www.youtube.com/watch?v=kzcI5F4tGiU).
+This is a port of [amosblomqvist's learning system](https://github.com/amosblomqvist/learn) — his AI setup from the video [How I Use AI to Learn Things](https://www.youtube.com/watch?v=kzcI5F4tGiU), originally built as [pi](https://github.com/earendil-works/pi) configuration.
 
-A personal system I built for myself, shared as-is. Built for **OpenCode v2** (`opencode2` beta): the teaching philosophy encoded as skills, the subagents that do research and visuals, and a live Obsidian mirror of every lesson.
+The teaching philosophy, the skills, and the system design are all his; this repo adapts that pi configuration to **OpenCode v2** (`opencode2` beta) — same ideas, different harness.
 
 ## What's in it
 
@@ -23,13 +23,13 @@ This repo **is** an `.opencode` directory. From your learning project's root:
 git clone <this-repo-url> .opencode
 ```
 
-Then open `opencode2` in that directory. Skills, agents, and all plugins are discovered automatically — nothing else to install.
+Then open `opencode2` in that directory. Skills, agents, and all plugins are discovered automatically.
 
 One exception: the `md-link` **TUI module** (the `ctrl+alt:m` / `/md-link` toggle) is not auto-discovered by v2, so register it once:
 
 ```bash
-./install.sh                # adds the tui module to ~/.config/opencode/cli.json
 ./install.sh --dry-run      # preview
+./install.sh                # adds the tui module to ~/.config/opencode/cli.json
 ./uninstall.sh              # remove it again
 ```
 
@@ -53,3 +53,8 @@ One exception: the `md-link` **TUI module** (the `ctrl+alt:m` / `/md-link` toggl
 
 - The makers render but cannot push images into the model's context (v2 beta strips tool-result images) — so `render_*` returns the PNG path and the maker opens it with `read` to inspect. Same verify-by-looking loop, one extra step.
 - You can run the system without subagents: the main session does the teaching. You lose the researcher (truth verification) and the generated visuals.
+
+## Credits
+
+- **amosblomqvist** — original system, teaching philosophy, and video: [amosblomqvist/learn](https://github.com/amosblomqvist/learn) (pi configuration)
+- This repository — OpenCode v2 port of that pi configuration; the port mechanics (plugins, forms-based quiz, symlinking installer) are the only new work here
