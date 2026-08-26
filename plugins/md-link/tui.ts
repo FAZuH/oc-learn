@@ -312,8 +312,7 @@ export default {
           commands: [
             {
               id: "md-link.toggle",
-              title: "md-link: toggle live mirror",
-              description: 'Toggle Obsidian live mirror. Optional arg: output dir (/md-link "6 Study")',
+              title: "Live mirror",
               group: "md-link",
               bind: "ctrl+alt+m",
               palette: true,
@@ -322,8 +321,7 @@ export default {
             },
             {
               id: "md-link.setdir",
-              title: "md-link: set output directory…",
-              description: "Edit the default directory where mirror files are created",
+              title: "Output directory…",
               group: "md-link",
               palette: true,
               slash: { name: "md-link-dir" },
@@ -331,8 +329,7 @@ export default {
             },
             {
               id: "md-link.keep",
-              title: "md-link: show last N messages…",
-              description: "Prune the mirror to the N most recent replies (empty = all)",
+              title: "Keep last N",
               group: "md-link",
               palette: true,
               slash: { name: "md-link-keep" },
@@ -340,8 +337,7 @@ export default {
             },
             {
               id: "md-link.persist",
-              title: "md-link: toggle persistent mirrors",
-              description: 'Keep mirrors across TUI restarts (/md-link-persist on|off)',
+              title: "Persistence",
               group: "md-link",
               palette: true,
               slash: { name: "md-link-persist" },

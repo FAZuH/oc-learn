@@ -94,8 +94,7 @@ export default {
           commands: [
             {
               id: "viz.setdir",
-              title: "viz: set output directory…",
-              description: "Where published visuals are saved (empty = project viz/)",
+              title: "Output directory…",
               group: "viz",
               palette: true,
               slash: { name: "viz-dir" },
