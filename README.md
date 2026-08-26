@@ -59,7 +59,7 @@ Visuals publish into the session project's `viz/` by default. To always publish 
 
 - The teaching flow: `teach` probes your level with graded quizzes (`quiz_ask`/`quiz_grade`), plans a dependency map, then teaches node by node with a quiz check after each one. Non-graded questions use OpenCode's built-in `question` tool.
 - Visuals are never hand-faked: the skill briefs a maker subagent, which authors, renders to PNG, **looks at the result**, iterates, and only then publishes into `viz/` for embedding.
-- `md-link` mirrors only reading-relevant content: your prompts, lesson prose, and quiz Q&A. Tool noise (bash, reads, edits) is omitted. Toggle it in the TUI with `ctrl+alt:m` or `/md-link <dir>` — `install.sh -g` registers the TUI module for you.
+- `md-link` mirrors only reading-relevant content: your prompts, lesson prose, and quiz Q&A. Tool noise (bash, reads, edits) is omitted. Toggle it in the TUI with `ctrl+alt:m` or `/md-link <dir>` — `install.sh -g` registers the TUI module for you. `/md-link-persist` keeps mirrors across TUI restarts and auto-resumes them on next launch; `/md-link` OFF still deletes immediately.
 
 - The makers render but cannot push images into the model's context (v2 beta strips tool-result images) — so `render_*` returns the PNG path and the maker opens it with `read` to inspect. Same verify-by-looking loop, one extra step.
 - You can run the system without subagents: the main session does the teaching. You lose the researcher (truth verification) and the generated visuals.

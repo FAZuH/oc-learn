@@ -14,7 +14,12 @@
  *     "defaultDir": "/abs/dir" | null,          // fallback output dir
  *     "keep": 25 | null,                        // prune mirrors to N newest replies
  *     "sessions": { "<sessionID>": "/abs/dir" } // "" dir = use defaultDir
+ *     "persist": true|false                     // true = mirrors survive TUI exit
  *   }
+ *
+ * With persist=true, TUI exit keeps this project's mirror files AND their
+ * session entries, so the poller resumes mirroring into the same files on
+ * the next launch. Explicit /md-link OFF always deletes regardless.
  *
  * Mirror file contract (<dir>/<sessionID>.md):
  *   Contains ONLY response blocks — no frontmatter, titles, or separators:
@@ -36,9 +41,11 @@ export type MdLinkState = {
   defaultDir: string | null
   keep: number | null
   sessions: Record<string, string>
+  /** True = mirror files + session entries survive TUI exit (resume next launch). */
+  persist?: boolean
 }
 
-const EMPTY_STATE: MdLinkState = { defaultDir: null, keep: null, sessions: {} }
+const EMPTY_STATE: MdLinkState = { defaultDir: null, keep: null, sessions: {}, persist: false }
 
 /** Read state, migrating legacy formats (plain array / {sessions:[...]}). */
 export function loadState(): MdLinkState {
@@ -65,6 +72,7 @@ export function loadState(): MdLinkState {
         defaultDir: typeof raw.defaultDir === "string" ? raw.defaultDir : null,
         keep: typeof raw.keep === "number" && raw.keep >= 1 ? Math.floor(raw.keep) : null,
         sessions,
+        persist: raw.persist === true,
       }
     }
   } catch {}

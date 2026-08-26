@@ -12,9 +12,13 @@
  *   /md-link-dir                  set the default output directory
  *   /md-link-keep                 keep only the N newest replies (empty = all);
  *                                 existing mirrors are trimmed immediately
+ *   /md-link-persist [on|off]     persistent mirrors: while ON, TUI exit keeps
+ *                                 this project's mirror files + session entries
+ *                                 and mirroring auto-resumes next launch;
+ *                                 explicit /md-link OFF still deletes at once
  *
- * On TUI exit, mirror files belonging to this project are deleted — mirrors
- * are transient. See core.ts for state/file contracts.
+ * On TUI exit, mirror files belonging to this project are deleted unless
+ * persistence (/md-link-persist) is ON. See core.ts for state/file contracts.
  */
 
 import { accessSync, constants as fsConstants, existsSync, readFileSync, rmSync, statSync } from "fs"
@@ -166,7 +170,12 @@ export default {
         saveState(st)
         touchMirror(file)
         const backfilled = await backfillLatestTurn(sessionID, file, st.keep, Date.now())
-        toast(backfilled ? `Live mirror ON, latest reply backfilled → ${short(file)}` : `Live mirror ON → ${file}`)
+        const tag = st.persist ? " (persistent)" : ""
+        toast(
+          backfilled
+            ? `Live mirror ON, latest reply backfilled → ${short(file)}${tag}`
+            : `Live mirror ON → ${file}${tag}`,
+        )
       } catch (e: any) {
         toast(`Failed: ${e?.message ?? e}`, "error")
       }
@@ -237,7 +246,38 @@ export default {
       }
     }
 
-    // ——— transient cleanup on TUI close ———
+    // ——— persistence toggle ———
+
+    /** Flip (or force via on|off arg) persistent-mirror mode: kept mirrors
+     * survive TUI exit and their sessions auto-resume on next launch. */
+    async function togglePersistence(input?: unknown): Promise<void> {
+      try {
+        const st = loadState()
+        const arg = extractArg(input).trim().toLowerCase()
+        if (arg === "on" || arg === "true" || arg === "1") st.persist = true
+        else if (arg === "off" || arg === "false" || arg === "0") st.persist = false
+        else st.persist = !st.persist
+        saveState(st)
+        toast(
+          st.persist
+            ? "Persistent mirrors ON — survive TUI exit, resume next launch"
+            : "Persistent mirrors OFF — mirrors deleted on TUI exit",
+          st.persist ? "info" : "warning",
+        )
+      } catch (e: any) {
+        toast(`Failed: ${e?.message ?? e}`, "error")
+      }
+    }
+
+    // ——— startup notice for persistent mirrors ———
+
+    try {
+      const root = pwd()
+      const resumed = Object.values(loadState().sessions).filter((d) => root && d.startsWith(root)).length
+      if (resumed > 0) toast(`md-link: resumed ${resumed} persistent mirror${resumed === 1 ? "" : "s"}`)
+    } catch {}
+
+    // ——— cleanup on TUI close (skipped while persistence is ON) ———
 
     let cleaned = false
     function cleanupOnExit(): void {
@@ -246,6 +286,7 @@ export default {
       try {
         const root = pwd()
         const st = loadState()
+        if (st.persist) return // persistent mode: keep files + entries, resume next launch
         for (const [sid, dir] of Object.entries(st.sessions)) {
           // only remove mirrors owned by THIS project — other TUIs keep theirs
           if (root && !dir.startsWith(root)) continue
@@ -296,6 +337,15 @@ export default {
               palette: true,
               slash: { name: "md-link-keep" },
               run: () => openKeepDialog(),
+            },
+            {
+              id: "md-link.persist",
+              title: "md-link: toggle persistent mirrors",
+              description: 'Keep mirrors across TUI restarts (/md-link-persist on|off)',
+              group: "md-link",
+              palette: true,
+              slash: { name: "md-link-persist" },
+              run: (input?: unknown) => togglePersistence(input),
             },
           ],
         }))

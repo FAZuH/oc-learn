@@ -5,6 +5,9 @@
  * the state file (see core.ts for the contracts). Sessions are toggled
  * exclusively by the TUI plugin — this plugin never enables anything.
  *
+ * Mirrors are transient by default — with persistence ON (/md-link-persist),
+ * session entries survive TUI exit and this poller resumes them on next launch.
+ *
  * What gets mirrored (teaching-session parity with the pi md-log):
  *   - assistant replies   → poller (2.5 s) over `opencode2 api get …/message`
  *   - user prompts        → poller, as `> [!quote] YOU` callouts
