@@ -187,8 +187,8 @@ export default {
                 {
                   key: "answer",
                   type: multiSelect ? "multiselect" : "string",
-                  title: question,
-                  ...(details ? { description: details } : {}),
+                  title: "Question",
+                  description: details ? `${question}\n\n${details}` : question,
                   options: displayOptions,
                 },
                 { key: "note", type: "string", title: "Note (optional)" },
