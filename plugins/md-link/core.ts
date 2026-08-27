@@ -34,8 +34,9 @@
 
 import { mkdirSync, readFileSync, writeFileSync, existsSync, appendFileSync } from "fs"
 import { dirname, join } from "path"
+import { homedir } from "os"
 
-export const STATE_FILE = "/home/fazuh/.config/opencode/md-link-state.json"
+export const STATE_FILE = join(homedir(), ".config", "opencode", "md-link-state.json")
 
 export type MdLinkState = {
   defaultDir: string | null

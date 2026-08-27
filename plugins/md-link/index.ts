@@ -32,8 +32,6 @@ import {
   touchMirror,
 } from "./core.ts"
 
-/** Legacy fallback dir for sessions with no recorded path. */
-const FALLBACK_DIR = "/home/fazuh/Workspaces/Notes/6 Study"
 const POLL_MS = 2_500
 /** Cap on how many historical messages a single sync may backfill. */
 const MAX_CATCHUP = 10
@@ -67,7 +65,8 @@ function callout(type: string, title: string, bodyLines: string[]): string {
 async function syncSession(sessionID: string): Promise<void> {
   const st = loadState()
   if (!isEnabled(st, sessionID)) return
-  const file = mirrorFile(st, sessionID, FALLBACK_DIR)
+  // Fallback chain: recorded dir → config defaultDir → cwd (no hardcoded paths).
+  const file = mirrorFile(st, sessionID, process.cwd())
   if (!file) return
 
   touchMirror(file)
@@ -100,7 +99,7 @@ function mirrorFor(sessionID: unknown): string | null {
   if (typeof sessionID !== "string" || !sessionID) return null
   const st = loadState()
   if (!isEnabled(st, sessionID)) return null
-  return mirrorFile(st, sessionID, FALLBACK_DIR)
+  return mirrorFile(st, sessionID, process.cwd())
 }
 
 function appendQa(file: string, markerKey: string, text: string, keep: number | null): void {
