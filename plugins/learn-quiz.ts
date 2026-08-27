@@ -18,7 +18,7 @@
  * Transport: the server-plugin ctx exposes no form API, so form calls go
  * through the `opencode2 api` CLI (port discovery + auth handled). Wire
  * protocol in ocv2-findings:
- *   POST /api/session/:sid/form            {title, fields:[{key,type,label,options}]}
+ *   POST /api/session/:sid/form            {title, fields:[{key,type,title,description,options}]}
  *   GET  /api/session/:sid/form/:fid/state {status: pending|answered|cancelled, answer}
  *   POST /api/session/:sid/form/:fid/reply {answer: {key: value}}
  */
@@ -104,9 +104,11 @@ function optionRef(options: QuizOption[], index: number): string {
   return `${index}. ${opt ? opt.label : "(unknown)"}`
 }
 
-/** First line of a (possibly multi-line) question — used as the form title.
- * Never truncated: an ellipsized form title IS the "quiz cuts off my
- * question" bug; the TUI can wrap or clip it visually, we must not. */
+/** First line of a (possibly multi-line) question — used as the form
+ * chrome title. Never truncated: an ellipsized form title IS the "quiz cuts
+ * off my question" bug; the TUI can wrap or clip it visually, we must not.
+ * The full question (all lines) is carried in the field `title` so the TUI
+ * renders every line in the field block, not just the header. */
 function firstLine(text: string): string {
   return text.split("\n")[0].trim()
 }
@@ -185,10 +187,11 @@ export default {
                 {
                   key: "answer",
                   type: multiSelect ? "multiselect" : "string",
-                  label: details ? `${question}\n\n${details}` : question,
+                  title: question,
+                  ...(details ? { description: details } : {}),
                   options: displayOptions,
                 },
-                { key: "note", type: "string", label: "Note (optional)" },
+                { key: "note", type: "string", title: "Note (optional)" },
               ],
             })
             const formID = created?.data?.id
