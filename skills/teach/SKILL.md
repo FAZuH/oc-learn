@@ -174,7 +174,8 @@ When a learn dir IS declared, keep one folder per subject under it, ordinally nu
     PLAN.md                     the subject graph — see boundaries below
     NOTES.md                    the learner record for this subject
     RESOURCES.md                sources used + candidate backlog
-    assets/                     shared media for this subject
+    assets/                     shared media for this subject — subject-global only,
+                                no per-lesson asset dirs
     lessons/
       0001-<lesson-slug>/       kebab slug of the sitting's topic; next = max existing + 1
         session.md              live log of one sitting (+ frontmatter `date: YYYY-MM-DD HH:mm`)
@@ -183,6 +184,8 @@ When a learn dir IS declared, keep one folder per subject under it, ordinally nu
 
 Dates live in frontmatter and dated section headers, never in filenames — date-titled notes collide with his Obsidian daily notes.
 
+**Create each of these files from the skeleton in this skill's `reference/<file>.template.md` and keep every heading verbatim from then on.** Strict rigidity applies to PLAN.md, NOTES.md, RESOURCES.md, and quiz.md; `session.md`'s narrative between its title and `## Wrap-up` is free-form — but the Wrap-up section is mandatory and closes every sitting.
+
 **File boundaries — keep them crisp or content scatters back:**
 
 - **`PLAN.md`** — the durable artifact, updated in place across sessions. Unconditional truths, strands table with status, the current **colored DAG**, open gaps not yet taught. Contains *no* prose about the learner: evidence lives elsewhere, cited by reference (`0002-badges q3 ✓` — lesson number + slug prefix + question id).
@@ -190,7 +193,7 @@ Dates live in frontmatter and dated section headers, never in filenames — date
 - **`RESOURCES.md`** — sources actually used (with what each contributed) plus a backlog of candidates.
 - **`lessons/<NNNN-slug>/session.md`** — today's live log, written as the session runs: what was motivated and established, sidetracks, node status flips. A running text mirror he can read mid-lesson without waiting for anything to be distilled.
 - **`lessons/<NNNN-slug>/quiz.md`** — per-question items: options, selection, his note, verdict, explanation.
-- Media defaults to `<subject>/assets/`; a lesson may keep its own small asset folder when visuals belong to that lesson alone.
+- Media lives in `<subject>/assets/` — shared pool for the whole subject; no per-lesson asset folders.
 
 **When does a new lesson dir open?** When the sitting teaches new material or runs a planned major check — then number it `max+1`. **Micro-sessions merge:** pure requizzes and patch-only follow-ups append into the most recent lesson's `quiz.md` under a new dated section header (`## YYYY-MM-DD HH:mm — <label>`) instead of opening a dir. If a "requiz" turns into teaching mid-way, promote it: cut over to a fresh lesson dir and note the split in both.
 
