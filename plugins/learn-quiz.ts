@@ -182,7 +182,7 @@ export default {
             displayOptions.push({ label: "I don't know", value: DONT_KNOW })
 
             const created = await api("post", `/api/session/${sessionID}/form`, {
-              title: firstLine(question),
+              title: "Quiz",
               fields: [
                 {
                   key: "answer",
