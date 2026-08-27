@@ -165,12 +165,38 @@ If you catch yourself asserting a fact he'd have to take on faith — foundation
 
 Teaching leaves artifacts worth carrying forward, but persistence is opt-in per workspace: **check the project's AGENTS.md for a declared learn/lesson directory before writing anything anywhere. No declaration = persist nothing.** (If he asks mid-session to save something anyway, write wherever he points.)
 
-When a learn dir IS declared, keep one folder per topic under it (`<topic-slug>/`) containing two files:
+When a learn dir IS declared, keep one folder per subject under it, ordinally numbered:
 
-- **`plan.md`** — the durable artifact, updated in place across sessions. Verified facts and the sources actually used; what he knows vs. where his understanding breaks, with the quiz evidence; the current **colored DAG**; the misconception list (each entry states the wrong belief itself, never "missed Q3"); open gaps not yet taught. Seed it during Phase 1–2, update it whenever the map changes or a check lands/misses, and distill today's session log into it at session end.
-- **`<YYYY-MM-DD>.md`** — today's live session log, written as the session runs: what was motivated and established, quiz Q&A, sidetracks, node status flips. A running text mirror he can read mid-lesson without waiting for anything to be distilled. Disposable once its content lives in `plan.md`.
+```
+<learn-dir>/
+  LEARNER.md                    global learner profile (workspace-owned)
+  0001-<subject-slug>/          NNNN = zero-padded ordinal; next = max existing + 1
+    PLAN.md                     the subject graph — see boundaries below
+    NOTES.md                    the learner record for this subject
+    RESOURCES.md                sources used + candidate backlog
+    assets/                     shared media for this subject
+    lessons/
+      0001-<lesson-slug>/       kebab slug of the sitting's topic; next = max existing + 1
+        session.md              live log of one sitting (+ frontmatter `date: YYYY-MM-DD HH:mm`)
+        quiz.md                 graded Q&A detail for that sitting
+```
 
-Read-back closes the loop: a later session's Phase 1 starts from related `plan.md` files instead of interrogating him about already-mastered ground. His time is the scarcest resource in probing — records are how you stop spending it.
+Dates live in frontmatter and dated section headers, never in filenames — date-titled notes collide with his Obsidian daily notes.
+
+**File boundaries — keep them crisp or content scatters back:**
+
+- **`PLAN.md`** — the durable artifact, updated in place across sessions. Unconditional truths, strands table with status, the current **colored DAG**, open gaps not yet taught. Contains *no* prose about the learner: evidence lives elsewhere, cited by reference (`0002-badges q3 ✓` — lesson number + slug prefix + question id).
+- **`NOTES.md`** — everything about him as a learner of this subject: misconception list (each entry states the wrong belief itself, never "missed Q3"), probe edge findings from Phase 1, protocol quirks and preferences.
+- **`RESOURCES.md`** — sources actually used (with what each contributed) plus a backlog of candidates.
+- **`lessons/<NNNN-slug>/session.md`** — today's live log, written as the session runs: what was motivated and established, sidetracks, node status flips. A running text mirror he can read mid-lesson without waiting for anything to be distilled.
+- **`lessons/<NNNN-slug>/quiz.md`** — per-question items: options, selection, his note, verdict, explanation.
+- Media defaults to `<subject>/assets/`; a lesson may keep its own small asset folder when visuals belong to that lesson alone.
+
+**When does a new lesson dir open?** When the sitting teaches new material or runs a planned major check — then number it `max+1`. **Micro-sessions merge:** pure requizzes and patch-only follow-ups append into the most recent lesson's `quiz.md` under a new dated section header (`## YYYY-MM-DD HH:mm — <label>`) instead of opening a dir. If a "requiz" turns into teaching mid-way, promote it: cut over to a fresh lesson dir and note the split in both.
+
+**Distill at session end:** quiz verdicts → evidence refs in PLAN.md, misconception changes → NOTES.md, sources used → RESOURCES.md. The session.md stays as history.
+
+Read-back closes the loop: a later session's Phase 1 starts from the subject's PLAN.md + NOTES.md and the newest lessons' session/quiz files instead of interrogating him about already-mastered ground. His time is the scarcest resource in probing — records are how you stop spending it.
 
 ## Formatting — math renders as LaTeX
 
