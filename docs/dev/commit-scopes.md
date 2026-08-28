@@ -9,9 +9,9 @@ Format: `type(scope): summary` or `type: summary`.
 
 | Scope       | Covers                                              |
 | ----------- | --------------------------------------------------- |
-| `learn-quiz` | `plugins/learn-quiz.ts`                            |
+| `learn-quiz` | `plugins/quiz/**`                            |
 | `md-link`   | `plugins/md-link/**`                                 |
-| `viz`       | `plugins/learn-viz-tools.ts`, `plugins/learn-viz-tui.ts`, `lib/viz-common.ts` |
+| `viz`       | `plugins/viz/**`, `lib/viz-common.ts` |
 | `agents`    | `agents/**`                                          |
 | `skills`    | `skills/**`                                          |
 
