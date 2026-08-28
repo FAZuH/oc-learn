@@ -1,0 +1,11 @@
+{
+  "name": "learn-quiz",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "beta"
+  }
+}
