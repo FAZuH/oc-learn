@@ -5,7 +5,13 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GLOBAL_CFG="$HOME/.config/opencode"
 MANIFEST="$REPO/.learn-links.json"
-TUI_PATHS=("$REPO/plugins/md-link/tui.ts" "$REPO/plugins/learn-viz-tui.ts")
+# Legacy TUI paths from pre-tui:true installs (all variants)
+TUI_PATHS=(
+  "$REPO/plugins/md-link/tui.ts"
+  "$REPO/plugins/md-link/src/tui.ts"
+  "$REPO/plugins/learn-viz-tui.ts"
+  "$REPO/plugins/viz/src/tui.ts"
+)
 DRY=0
 TARGET=""     # resolved config dir whose links get removed
 TARGET_KEY="" # manifest key
@@ -118,7 +124,7 @@ import json,sys
 e=json.loads(sys.argv[1])
 print('\n'.join(e.get('links',[])))" "$ENTRY_JSON")
 
-  # cli.json entries: only for the global target, only for our tui paths.
+  # legacy cli.json entries — clean both old and new paths if manifest says we touched it
   IS_CLI=$(python3 -c "
 import json,sys
 e=json.loads(sys.argv[1])
@@ -130,14 +136,36 @@ print('1' if e.get('cli') else '0')" "$ENTRY_JSON")
       python3 - "$key/cli.json" "${TUI_PATHS[@]}" <<'EOF'
 import json, sys
 path, tuis = sys.argv[1], sys.argv[2:]
-cfg = json.load(open(path))
+try:
+    cfg = json.load(open(path))
+except FileNotFoundError:
+    cfg = {}
 plugins = cfg.get("plugins", [])
 for tui in tuis:
     if tui in plugins:
         plugins.remove(tui)
 json.dump(cfg, open(path, "w"), indent=2)
 EOF
-      ok "cli.json — tui modules unregistered"
+      ok "cli.json — tui modules unregistered (legacy)"
+    fi
+  else
+    # even without manifest flag, clean any stray legacy entries that may linger
+    if [[ -f "$key/cli.json" ]]; then
+      python3 - "$key/cli.json" "${TUI_PATHS[@]}" <<'EOF'
+import json, sys
+path, tuis = sys.argv[1], sys.argv[2:]
+try:
+    cfg = json.load(open(path))
+except:
+    cfg = {}
+plugins = cfg.get("plugins", [])
+orig = list(plugins)
+plugins[:] = [p for p in plugins if p not in tuis]
+if plugins != orig:
+    cfg["plugins"] = plugins
+    json.dump(cfg, open(path, "w"), indent=2)
+    print("cleaned")
+EOF
     fi
   fi
 

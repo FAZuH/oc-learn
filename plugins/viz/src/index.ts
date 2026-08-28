@@ -13,7 +13,7 @@ import {
   snippetAround,
   writeBody,
   writeFileSync,
-} from "../lib/viz-common.ts"
+} from "./common.ts"
 
 /**
  * learn-viz-tools — the visual maker authoring loops as v2 custom tools.
@@ -44,7 +44,8 @@ function sid(tctx: any): string {
 }
 
 export default {
-  id: "fazuh.learn-viz-tools",
+  id: "oc-learn.viz",
+  tui: true,
 
   setup: async (ctx: any) => {
     // Publish base: resolved per call. A globally loaded plugin's setup ctx

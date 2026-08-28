@@ -114,7 +114,7 @@ function firstLine(text: string): string {
 }
 
 export default {
-  id: "fazuh.learn-quiz",
+  id: "oc-learn.quiz",
 
   setup: async (ctx: any) => {
     await ctx.tool.transform((tools) => {

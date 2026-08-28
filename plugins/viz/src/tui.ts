@@ -46,7 +46,7 @@ function validateDir(raw: string): DirResult {
 }
 
 export default {
-  id: "learn.viz-tui",
+  id: "oc-learn.viz-tui",
 
   setup: async (ctx: any) => {
     const toast = (message: string, variant: string = "info") => {

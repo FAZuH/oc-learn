@@ -114,7 +114,7 @@ async function backfillLatestTurn(
 }
 
 export default {
-  id: "vault.md-link-tui",
+  id: "oc-learn.md-link-tui",
 
   setup: async (ctx: any) => {
     const pwd = (): string =>

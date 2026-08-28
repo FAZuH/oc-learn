@@ -45,8 +45,8 @@ ${B}Notes:${R}
   - Existing files that are not our symlinks are left untouched.
   - Created links are tracked in .learn-links.json (gitignored);
     uninstall.sh removes exactly those.
-  - Global installs also register the md-link TUI module in cli.json
-    (the only piece v2 cannot auto-discover).
+  - TUI modules (plugins/*/src/tui.ts) autoload via tui:true on their
+    server plugin — no cli.json entry needed.
   - Do NOT install the same repo into global AND a project that loads it:
     OpenCode would register the same plugin ids twice and hang. install.sh
     refuses that combination unless --force is given.
@@ -186,47 +186,72 @@ for rel in "${items[@]}"; do
   fi
 done
 
-# ── cli.json: only global installs touch it (TUI module registration) ───────
-# CLI_OURS records that our tui entries live in this cli.json, whether we just
-# added them or found them already there — uninstall removes them either way.
-TUI_PATHS=("$REPO/plugins/md-link/tui.ts" "$REPO/plugins/learn-viz-tui.ts")
+# ── legacy cli.json cleanup ───────
+# Pre-tui:true installs registered TUI modules explicitly in cli.json.
+# With tui:true autoload that is no longer needed. On global installs,
+# remove any stale entries we may have created previously.
 CLI_OURS=0
-if [[ "$MODE" == "global" ]]; then
-  step "Register TUI modules"
-  for p in "${TUI_PATHS[@]}"; do
-    [[ -f "$p" ]] || die "tui module missing: $p"
-  done
+LEGACY_CLEANED=0
+if [[ "$MODE" == "global" && -f "$GLOBAL_CFG/cli.json" ]]; then
+  LEGACY_TUI_PATHS=(
+    "$REPO/plugins/md-link/tui.ts"
+    "$REPO/plugins/md-link/src/tui.ts"
+    "$REPO/plugins/learn-viz-tui.ts"
+    "$REPO/plugins/viz/src/tui.ts"
+  )
   if [[ $DRY -eq 1 ]]; then
-    for p in "${TUI_PATHS[@]}"; do
-      would "add $p to $GLOBAL_CFG/cli.json plugins[]"
-    done
-  else
-    out="$(python3 - "$GLOBAL_CFG/cli.json" "${TUI_PATHS[@]}" <<'EOF'
+    will_clean="$(python3 - "$GLOBAL_CFG/cli.json" "${LEGACY_TUI_PATHS[@]}" <<'EOF'
 import json, sys
 path, tuis = sys.argv[1], sys.argv[2:]
 try:
     cfg = json.load(open(path))
-except FileNotFoundError:
+except: 
     cfg = {}
-plugins = cfg.setdefault("plugins", [])
-for tui in tuis:
-    if tui not in plugins:
-        plugins.append(tui)
-        print("added " + tui)
-    else:
-        print("present " + tui)
-json.dump(cfg, open(path, "w"), indent=2)
+plugins = cfg.get("plugins", [])
+hits = [p for p in plugins if p in tuis]
+print("\n".join(hits))
 EOF
 )"
-    CLI_OURS=1
-    while IFS= read -r line; do
-      [[ -n "$line" ]] || continue
-      if [[ "$line" == added* ]]; then
-        ok "cli.json — registered $(basename "${line#added }")"
-      else
-        ok "cli.json — already registered $(basename "${line#present }")"
+    if [[ -n "$will_clean" ]]; then
+      while IFS= read -r p; do would "remove stale $p from cli.json"; done <<< "$will_clean"
+    fi
+  else
+    cleaned="$(python3 - "$GLOBAL_CFG/cli.json" "${LEGACY_TUI_PATHS[@]}" <<'EOF'
+import json, sys
+path, tuis = sys.argv[1], sys.argv[2:]
+try:
+    cfg = json.load(open(path))
+except:
+    cfg = {}
+plugins = cfg.get("plugins", [])
+orig = list(plugins)
+plugins[:] = [p for p in plugins if p not in tuis]
+if plugins != orig:
+    cfg["plugins"] = plugins
+    json.dump(cfg, open(path, "w"), indent=2)
+    print("\n".join(set(orig) - set(plugins)))
+EOF
+)"
+    if [[ -n "$cleaned" ]]; then
+      LEGACY_CLEANED=1
+      while IFS= read -r p; do ok "cli.json — removed stale $(basename "$p")"; done <<< "$cleaned"
+    else
+      # also consider already-clean as cleaned for manifest purposes if no hits
+      # but cli flag may still be set from older manifest — clear it
+      has_legacy=0
+      # check if manifest still thinks we have cli entries
+      if [[ -f "$MANIFEST" ]]; then
+        has_legacy="$(python3 - "$MANIFEST" "$TARGET_KEY" <<'EOF'
+import json, sys
+try: m=json.load(open(sys.argv[1]))
+except: m={}
+e=m.get(sys.argv[2],{})
+print("1" if e.get("cli") else "0")
+EOF
+)"
       fi
-    done <<< "$out"
+      if [[ "$has_legacy" == "1" ]]; then LEGACY_CLEANED=1; fi
+    fi
   fi
 fi
 
@@ -235,10 +260,11 @@ fi
 # the canonical repo path for that item. Only those get tracked, so
 # uninstall.sh can never remove anything it did not create.
 if [[ $DRY -eq 0 ]]; then
-  LEARN_CLI_TOUCHED=$CLI_OURS python3 - "$MANIFEST" "$TARGET_KEY" "$TARGET" "$REPO" "${items[@]}" <<'EOF'
+  LEARN_CLI_TOUCHED=$CLI_OURS LEARN_LEGACY_CLEANED=$LEGACY_CLEANED python3 - "$MANIFEST" "$TARGET_KEY" "$TARGET" "$REPO" "${items[@]}" <<'EOF'
 import json, os, sys
 manifest_path, key, target, repo, *items = sys.argv[1:]
 cli_touched = os.environ.get("LEARN_CLI_TOUCHED") == "1"
+legacy_cleaned = os.environ.get("LEARN_LEGACY_CLEANED") == "1"
 try:
     m = json.load(open(manifest_path))
 except (FileNotFoundError, json.JSONDecodeError):
@@ -249,7 +275,12 @@ for rel in items:
     link = os.path.join(target, rel)
     if os.path.islink(link) and os.readlink(link) == os.path.join(repo, rel):
         owned.add(link)
-m[key] = {"target": target, "links": sorted(owned), "cli": entry["cli"] or cli_touched}
+# With tui:true autoload we no longer need cli.json entries; clear the flag
+# when legacy entries were cleaned, otherwise preserve for backward compat.
+cli_flag = entry["cli"] or cli_touched
+if legacy_cleaned:
+    cli_flag = False
+m[key] = {"target": target, "links": sorted(owned), "cli": cli_flag}
 json.dump(m, open(manifest_path, "w"), indent=2)
 EOF
 fi
