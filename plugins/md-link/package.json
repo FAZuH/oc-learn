@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./tui": "./tui.ts"
+    ".": "./src/index.ts",
+    "./tui": "./src/tui.ts"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "beta"
   }
 }
